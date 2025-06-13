@@ -56,7 +56,7 @@ class ModelLoader:
         try:
             self.debug_environment()
 
-            final_model_path = self._get_model_path(model_path)
+            final_model_path = "/app/model/model_vgg16.keras"
             logger.info(f"Found model at: {final_model_path}")
 
             file_size = os.path.getsize(final_model_path)
