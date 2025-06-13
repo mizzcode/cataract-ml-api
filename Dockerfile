@@ -24,9 +24,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Create model directory
-RUN mkdir -p model
-
 # Try to pull LFS files, fallback to download if failed
 RUN git lfs install && git lfs pull || \
     echo "LFS pull failed, model will be downloaded at runtime"
