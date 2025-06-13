@@ -42,8 +42,6 @@ RUN echo "=== BUILD TIME DEBUG ===" && \
     ls -la /app/ && \
     echo "=== Model directory ===" && \
     ls -la /app/model/ || echo "Model directory does not exist" && \
-    echo "=== Models directory ===" && \
-    ls -la /app/models/ || echo "Models directory does not exist" && \
     echo "=== Looking for .keras files ===" && \
     find /app -name "*.keras" -type f || echo "No .keras files found" && \
     echo "=== Current working directory ===" && \
@@ -62,8 +60,6 @@ echo "App directory contents:"\n\
 ls -la /app/\n\
 echo "Model directory contents:"\n\
 ls -la /app/model/ 2>/dev/null || echo "Model directory not found"\n\
-echo "Models directory contents:"\n\
-ls -la /app/models/ 2>/dev/null || echo "Models directory not found"\n\
 echo "Looking for keras files:"\n\
 find /app -name "*.keras" -type f 2>/dev/null || echo "No keras files found"\n\
 echo "Memory usage:"\n\

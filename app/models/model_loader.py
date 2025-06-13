@@ -167,7 +167,6 @@ class ModelLoader:
                 # Set default download paths to try
                 download_paths = [
                     "model/model_vgg16.keras",
-                    "models/model_vgg16.keras", 
                     "model_vgg16.keras",
                     "/app/model/model_vgg16.keras",  # Railway specific
                     "/tmp/model_vgg16.keras"  # Temporary directory
@@ -252,7 +251,6 @@ class ModelLoader:
             # Current directory variations
             current_dir / "model_vgg16.keras",
             current_dir / "model" / "model_vgg16.keras",
-            current_dir / "models" / "model_vgg16.keras",
             current_dir / "app" / "model" / "model_vgg16.keras",
             
             # Script directory variations
@@ -264,12 +262,10 @@ class ModelLoader:
             # Project root variations
             project_root / "model_vgg16.keras",
             project_root / "model" / "model_vgg16.keras",
-            project_root / "models" / "model_vgg16.keras",
             
             # Railway/Docker specific paths
             Path("/app/model_vgg16.keras"),
             Path("/app/model/model_vgg16.keras"),
-            Path("/app/models/model_vgg16.keras"),
             
             # Common relative paths
             Path("./model_vgg16.keras"),
