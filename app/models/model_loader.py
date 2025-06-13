@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import os
+import requests
 from pathlib import Path
 import logging
 
@@ -12,12 +13,69 @@ class ModelLoader:
         self.model_path = None
         self.class_names = ['Cataract', 'Normal']  # Adjust order based on your training
         
+        # Cloud storage URLs
+        self.model_urls = [
+            "https://drive.google.com/uc?export=download&id=1Ee95n98Oy6kLFO9sDXlTvgYsbedxe_Ww",
+        ]
+        
+    def download_model_from_cloud(self, download_path: str):
+        """Download model dari cloud storage"""
+        logger.info("Model not found locally, attempting to download from cloud...")
+        
+        # Buat direktori jika belum ada
+        os.makedirs(os.path.dirname(download_path), exist_ok=True)
+        
+        for url in self.model_urls:
+            try:
+                logger.info(f"Downloading model from: {url}")
+                
+                response = requests.get(url, stream=True, timeout=300)
+                response.raise_for_status()
+                
+                total_size = int(response.headers.get('content-length', 0))
+                logger.info(f"Downloading model ({total_size / (1024*1024):.1f} MB)...")
+                
+                with open(download_path, 'wb') as f:
+                    downloaded = 0
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            if total_size > 0:
+                                progress = (downloaded / total_size) * 100
+                                if downloaded % (1024*1024) == 0:  # Log setiap 1MB
+                                    logger.info(f"Download progress: {progress:.1f}%")
+                
+                logger.info("Model downloaded successfully!")
+                return True
+                
+            except Exception as e:
+                logger.error(f"Failed to download from {url}: {e}")
+                continue
+        
+        logger.error("Failed to download model from all URLs")
+        return False
+        
     def load_model(self, model_path: str = None):
         """Load the VGG16 .keras model"""
         try:
-            final_model_path = self._get_model_path(model_path)
+            # Coba cari model local dulu
+            try:
+                final_model_path = self._get_model_path(model_path)
+            except FileNotFoundError:
+                # Jika tidak ada, coba download
+                logger.info("Model not found locally, attempting download...")
+                
+                # Set default download path
+                download_path = "model/model_vgg16.keras"
+                
+                if self.download_model_from_cloud(download_path):
+                    final_model_path = download_path
+                else:
+                    raise FileNotFoundError("Could not find or download model file")
             
-            # Load your VGG16 .keras model
+            # Load model
+            logger.info(f"Loading model from: {final_model_path}")
             self.model = tf.keras.models.load_model(final_model_path)
             self.model_path = final_model_path
             
@@ -37,10 +95,10 @@ class ModelLoader:
     
     def _get_model_path(self, model_path: str = None) -> str:
         """Get the VGG16 .keras model path"""
-        if model_path is not None:
+        if model_path is not None and Path(model_path).exists():
             return model_path
             
-                # Get current working directory and script directory
+        # Get current working directory and script directory
         current_dir = Path.cwd()
         script_dir = Path(__file__).parent
         project_root = script_dir.parent.parent  # Go up to project root
@@ -83,16 +141,21 @@ class ModelLoader:
         
         # List available files for debugging
         logger.error("Available files in current directory:")
-        for item in current_dir.iterdir():
-            logger.error(f"  {item}")
+        try:
+            for item in current_dir.iterdir():
+                logger.error(f"  {item}")
+        except:
+            logger.error("Cannot list current directory")
             
         logger.error("Available files in script directory:")
-        for item in script_dir.iterdir():
-            logger.error(f"  {item}")
+        try:
+            for item in script_dir.iterdir():
+                logger.error(f"  {item}")
+        except:
+            logger.error("Cannot list script directory")
             
-        raise FileNotFoundError(f"model_vgg16.keras file not found. Searched in {len(possible_paths)} locations. Please ensure your VGG16 model file exists.")
+        raise FileNotFoundError(f"model_vgg16.keras file not found. Searched in {len(possible_paths)} locations.")
 
-    
     def _test_model(self):
         """Test the VGG16 model with dummy input"""
         try:
@@ -124,11 +187,6 @@ class ModelLoader:
             # Ensure image has batch dimension
             if len(processed_image.shape) == 3:
                 processed_image = np.expand_dims(processed_image, axis=0)
-            
-            # VGG16 preprocessing - ensure correct input format
-            # If your model expects [0, 255] range, uncomment this:
-            # if processed_image.max() <= 1.0:
-            #     processed_image = processed_image * 255.0
             
             # Make prediction
             predictions = self.model.predict(processed_image, verbose=1)

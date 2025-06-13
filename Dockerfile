@@ -7,23 +7,34 @@ WORKDIR /app
 # Upgrade pip to the latest version
 RUN pip install --upgrade pip
 
-# Install system dependencies required for OpenCV and TensorFlow
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
+    git \
+    git-lfs \
+    curl \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire project, including the model files
+# Copy project files
 COPY . .
 
-# Create static/uploads directory for file uploads (if needed)
+# Create model directory
+RUN mkdir -p model
+
+# Try to pull LFS files, fallback to download if failed
+RUN git lfs install && git lfs pull || \
+    echo "LFS pull failed, model will be downloaded at runtime"
+
+# Create static/uploads directory
 RUN mkdir -p static/uploads
 
-# Expose the port (default FastAPI port is 8000)
+# Expose the port
 EXPOSE 8000
 
 # Command to run the FastAPI app
