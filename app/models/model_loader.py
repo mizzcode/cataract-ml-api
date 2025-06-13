@@ -15,6 +15,7 @@ class ModelLoader:
         
         # Cloud storage URLs
         self.model_urls = [
+            "https://www.dropbox.com/scl/fi/myhukdszdsun9dtpdyekx/model_vgg16.keras?rlkey=kjjde07glo3oxb66uzbe76kv1&st=bivz28fr&dl=1",
             "https://drive.google.com/uc?export=download&id=1Ee95n98Oy6kLFO9sDXlTvgYsbedxe_Ww",
         ]
         
