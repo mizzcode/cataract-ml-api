@@ -8,6 +8,7 @@ WORKDIR /app
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 ENV TF_CPP_MIN_LOG_LEVEL=2
+ENV GIT_LFS_AUTH_TOKEN=${GIT_LFS_AUTH_TOKEN}
 
 # Upgrade pip to the latest version
 RUN pip install --upgrade pip
@@ -29,15 +30,20 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
+# Copy project files (includes .gitattributes for LFS)
 COPY . .
 
-# Initialize git and try to pull LFS files
-RUN git init . || true && \
-    git lfs install || true && \
-    git lfs pull || echo "LFS pull failed - model will be downloaded at runtime"
+# Initialize Git LFS and pull LFS objects with detailed logging
+RUN echo "=== Git LFS Setup ===" && \
+    git init . || true && \
+    git lfs install --force && \
+    git config --global credential.helper 'cache' && \
+    git config --global credential.helper '!echo password=${GIT_LFS_AUTH_TOKEN}; echo' && \
+    git remote add origin https://github.com/mizzcode/cataract-ml-api.git && \
+    git lfs fetch origin main && \
+    git lfs checkout || echo "LFS pull or checkout failed - check logs"
 
-# Check if model exists and create debug info
+# Debug build environment
 RUN echo "=== BUILD TIME DEBUG ===" && \
     ls -la /app/ && \
     echo "=== Model directory ===" && \
@@ -52,7 +58,7 @@ RUN echo "=== BUILD TIME DEBUG ===" && \
     python -c "import tensorflow as tf; print(f'TensorFlow: {tf.__version__}')" && \
     echo "=== BUILD DEBUG COMPLETE ==="
 
-# Add a health check script
+# Add health check script
 RUN echo '#!/bin/bash\n\
 echo "=== RUNTIME DEBUG ==="\n\
 echo "Current directory: $(pwd)"\n\
@@ -74,12 +80,11 @@ RUN chmod -R 755 /app
 # Expose the port
 EXPOSE 8000
 
-# Add startup script that runs debug and then starts the app
+# Startup script
 RUN echo '#!/bin/bash\n\
 echo "Starting application..."\n\
 /app/debug.sh\n\
 echo "Starting FastAPI server..."\n\
 exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --log-level info\n' > /app/start.sh && chmod +x /app/start.sh
 
-# Use the startup script
 CMD ["/app/start.sh"]
