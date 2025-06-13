@@ -33,15 +33,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Initialize Git LFS and pull LFS objects
+# Initialize Git LFS and pull LFS objects with detailed logging and strict failure
 RUN echo "=== Git LFS Setup ===" && \
     git init . && \
     git lfs install --force && \
+    echo "Configuring Git credential helper with token: ${GIT_LFS_AUTH_TOKEN}" && \
     git config --global credential.helper 'cache' && \
     git config --global credential.helper '!echo password=${GIT_LFS_AUTH_TOKEN}; echo' && \
     git remote add origin https://github.com/mizzcode/cataract-ml-api.git && \
-    git lfs fetch origin main && \
-    git lfs checkout || echo "LFS pull or checkout failed - check logs"
+    echo "Fetching LFS objects from origin main..." && \
+    git lfs fetch origin main 2>&1 || { echo "ERROR: git lfs fetch failed"; cat .git/lfs/logs/* || echo "No LFS logs available"; exit 1; } && \
+    echo "Checking out LFS objects..." && \
+    git lfs checkout 2>&1 || { echo "ERROR: git lfs checkout failed"; cat .git/lfs/logs/* || echo "No LFS logs available"; exit 1; }
 
 # Debug build environment
 RUN echo "=== BUILD TIME DEBUG ===" && \
