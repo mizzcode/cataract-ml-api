@@ -64,19 +64,19 @@ RUN echo "=== BUILD TIME DEBUG ===" && \
 
 # Add health check script
 RUN echo '#!/bin/bash\n\
-echo "=== RUNTIME DEBUG ==="\n\
-echo "Current directory: $(pwd)"\n\
-echo "App directory contents:"\n\
-ls -la /app/\n\
-echo "Model directory contents:"\n\
-ls -la /app/model/ 2>/dev/null || echo "Model directory not found"\n\
-echo "Looking for keras files:"\n\
-find /app -name "*.keras" -type f 2>/dev/null || echo "No keras files found"\n\
-echo "Memory usage:"\n\
-free -h\n\
-echo "Disk usage:"\n\
-df -h\n\
-echo "=== END RUNTIME DEBUG ==="\n' > /app/debug.sh && chmod +x /app/debug.sh
+    echo "=== RUNTIME DEBUG ==="\n\
+    echo "Current directory: $(pwd)"\n\
+    echo "App directory contents:"\n\
+    ls -la /app/\n\
+    echo "Model directory contents:"\n\
+    ls -la /app/model/ 2>/dev/null || echo "Model directory not found"\n\
+    echo "Looking for keras files:"\n\
+    find /app -name "*.keras" -type f 2>/dev/null || echo "No keras files found"\n\
+    echo "Memory usage:"\n\
+    free -h\n\
+    echo "Disk usage:"\n\
+    df -h\n\
+    echo "=== END RUNTIME DEBUG ==="\n' > /app/debug.sh && chmod +x /app/debug.sh
 
 # Set proper permissions
 RUN chmod -R 755 /app
@@ -86,9 +86,9 @@ EXPOSE 8000
 
 # Startup script
 RUN echo '#!/bin/bash\n\
-echo "Starting application..."\n\
-/app/debug.sh\n\
-echo "Starting FastAPI server..."\n\
-exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --log-level info\n' > /app/start.sh && chmod +x /app/start.sh
+    echo "Starting application..."\n\
+    /app/debug.sh\n\
+    echo "Starting FastAPI server..."\n\
+    exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --log-level info\n' > /app/start.sh && chmod +x /app/start.sh
 
 CMD ["/app/start.sh"]
