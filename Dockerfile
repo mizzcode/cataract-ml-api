@@ -32,9 +32,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p /app/model /app/models /app/static/uploads /app/logs
-
 # Initialize git and try to pull LFS files
 RUN git init . || true && \
     git lfs install || true && \
