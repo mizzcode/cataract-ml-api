@@ -30,12 +30,12 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files (includes .gitattributes for LFS)
+# Copy project files
 COPY . .
 
-# Initialize Git LFS and pull LFS objects with detailed logging
+# Initialize Git LFS and pull LFS objects
 RUN echo "=== Git LFS Setup ===" && \
-    git init . || true && \
+    git init . && \
     git lfs install --force && \
     git config --global credential.helper 'cache' && \
     git config --global credential.helper '!echo password=${GIT_LFS_AUTH_TOKEN}; echo' && \
